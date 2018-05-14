@@ -42,6 +42,7 @@ typedef struct
 #define SEVER_PORT 				8787
 #define UPDATA_SELF_PORT		9999   //Çø±ðÓÚsmartfurniture
 #define LISTEN_PORT				9050
+#define UDP_SEND_PORT			9050
 #define SOFTAP_SEVER_PORT		5050
 #define DEFAULT_TCP_NUM 		5
 #define EARSE_TIMES				31
@@ -76,5 +77,6 @@ void ICACHE_FLASH_ATTR send_sever_data(uint8 *pbuff);
 void ICACHE_FLASH_ATTR set_process_mode(WORK_MODE_T mode);
 WORK_MODE_T ICACHE_FLASH_ATTR get_process_mode(void);
 void ICACHE_FLASH_ATTR send_mcu_mode_status(void);
+void ICACHE_FLASH_ATTR creat_udp_broadcast(void);
 
 #endif /* APP_INCLUDE_USER_PROCESS_H_ */

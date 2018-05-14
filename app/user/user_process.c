@@ -20,6 +20,7 @@
 #include "gpio16.h"
 
 struct espconn user_tcp_conn;     		//与服务器建立TCP连接
+struct espconn user_udp_espconn;		//udp广播
 //struct espconn updata_tcp_conn;
 static linkConType pLink[LINK_MAX];   	//手机与设备建立TCP连接
 static struct espconn *pTcpServer;		//用于soft_ap sever参数设置
@@ -408,6 +409,8 @@ void ICACHE_FLASH_ATTR my_station_init(struct ip_addr *remote_ip,struct ip_addr 
 void ICACHE_FLASH_ATTR user_tcpclient_recv(void *arg, char *pdata, unsigned short len){
 	char* p_result = NULL;
 	struct espconn *pespconn = (struct espconn *)arg;
+	uint16 i,j;
+	uint8 temp_sever_ip[4]={0};
 
 	p_result = strstr(pdata, (const char *)"updata");
 	if(p_result != NULL){
@@ -417,7 +420,20 @@ void ICACHE_FLASH_ATTR user_tcpclient_recv(void *arg, char *pdata, unsigned shor
 		updata_flag = TRUE;
 		return;
 	}
-
+#if 1
+	p_result = strstr( (const char *)pdata , (const char *)"server_ip");
+	for(i=0,j=0; j<4; j++){
+		while((p_result[i+12] != '.') && (p_result[i+12] != '"')){
+			temp_sever_ip[j] = ((temp_sever_ip[j]*10) + (p_result[i+12]-0x30));
+			i++;
+//				os_printf("p_result：%d\r\n",p_result[i+12]);
+//				os_printf("第：%d次累加：%d\r\n",j,temp_sever_ip[j]);
+		}
+		i++;//跳过中间的 点'.'
+//			os_printf("收到服务器地址：%d\r\n",temp_sever_ip[j]);
+	}
+	IP4_ADDR(&user_sever_ip, temp_sever_ip[0], temp_sever_ip[1], temp_sever_ip[2], temp_sever_ip[3]);
+#endif
 	os_printf("收到app数据：%s\r\n",pdata);
 	rec_appdata_falg = TRUE;
 	os_memcpy(tcp_rec_buff,pdata,strlen(pdata));
@@ -541,7 +557,7 @@ void ICACHE_FLASH_ATTR router_connect(void){
 				espconn_tcp_set_max_con_allow(pTcpServer,LINK_MAX);//设置最大允许连接的手机数 3
 				espconn_regist_time(pTcpServer, server_timeover, 0);
 
-				set_process_mode(NET_CONNECT);
+				set_process_mode(SEVER_CONFIG);
 			}
 			else{
 				if(sta_times > 3000){//30s没连接上，认为失败
@@ -568,6 +584,7 @@ void ICACHE_FLASH_ATTR sever_connect(void){
 	struct ip_addr *sever_addr;
 	static struct espconn *pTcpServer;
 
+	sever_addr = (struct ip_addr *)os_malloc(sizeof(struct ip_addr));
 	switch(sta_count){
 		case 0://与服务器建立TCP连接
 			wifi_get_ip_info(STATION_IF,&info);
@@ -598,7 +615,7 @@ void ICACHE_FLASH_ATTR sever_connect(void){
 					sta_count++;
 				}
 				if(sta_times > 1000){//10s未能登录服务器,直接进入RUN模式
-					WORK_MODE = RUN_MODE;
+					WORK_MODE = NORMAL_MODE;
 					sta_times = 0;
 					sta_count = 0;
 				}
@@ -618,7 +635,7 @@ void ICACHE_FLASH_ATTR sever_connect(void){
 				}
 			}
 			if(sta_times > 1000){//10s未能登录服务器,直接进入RUN模式
-				WORK_MODE = RUN_MODE;
+				WORK_MODE = NORMAL_MODE;
 				sta_times = 0;
 				sta_count = 0;
 			}
@@ -713,6 +730,12 @@ void ICACHE_FLASH_ATTR ap_tcp_recv_cb(void *arg,char *pdata,unsigned short len){
 				(uint8*)user_ap_config.password,sizeof(user_ap_config.password));
 		user_spi_flash_write((USER_BASE_ADDR*SECTOR_SIZE)+SEVER_ADDR,
 				(uint8*)temp_sever_ip,4);
+
+//		os_printf("user_sever_ip_all: %x\r\n", user_sever_ip.addr);
+//		os_printf("user_sever_ip: %d\r\n", temp_sever_ip[0]);
+//		os_printf("user_sever_ip: %d\r\n", temp_sever_ip[1]);
+//		os_printf("user_sever_ip: %d\r\n", temp_sever_ip[2]);
+//		os_printf("user_sever_ip: %d\r\n", temp_sever_ip[3]);
 
 //		user_ap_config.bssid_set=1;
 		os_memset(tcp_send_buff,0,sizeof(tcp_send_buff));
@@ -896,7 +919,7 @@ void ICACHE_FLASH_ATTR run_process(void){
 //		send_app_status(tcp_send_buff);
 //	}
 	//连接状态检测
-	if(!wifi_userconfig_flag) connect_check();
+//	if(!wifi_userconfig_flag) connect_check();
 }
 
 void ICACHE_FLASH_ATTR updata_process(){
@@ -1148,7 +1171,7 @@ void ICACHE_FLASH_ATTR mode_process(void){
 			}
 			break;
 		case SEVER_CONFIG:
-			if((user_sever_ip.addr == 0xff) || (user_sever_ip.addr == 0x00)){
+			if((user_sever_ip.addr == 0xffffffff) || (user_sever_ip.addr == 0x00)){
 
 			}
 			else{
@@ -1156,11 +1179,27 @@ void ICACHE_FLASH_ATTR mode_process(void){
 			}
 			break;
 		case NET_CONNECT:
-
+//			//TEST ...
+//			sever_connect();
 			break;
 		case NORMAL_MODE:
+
+			run_process();
 			break;
 		case T_T_MODE:
+			//向控制盒或MCU发送服务器、app的控制指令
+			if(ttcmd_buff[0] != 0){
+				//后续要该成直接获取透传指令的strlen然后发送(而不是通过TT_CMD_LEN)，以解决不同设备不同长度指令兼容问题
+				//uart0_send_AT(ttcmd_buff,TT_CMD_LEN);
+//				uart0_send_AT(ttcmd_buff,ttcmd_len);
+				uart0_send_AT(ttcmd_buff,strlen(ttcmd_buff));
+				memset(ttcmd_buff,0,TT_CMD_LEN);
+			}
+			else{//清掉缓存，防止开启透传后直接发送之前的数据
+				if(ttcmd_buff[0] != 0)
+					memset(ttcmd_buff,0,TT_CMD_LEN);
+			}
+			run_process();
 			break;
 		case DELAY_RST_MODE:
 			if(temp_cnt > 100){
@@ -1221,6 +1260,35 @@ void ICACHE_FLASH_ATTR send_mcu_mode_status(void){
 		WORK_MODE = DELAY_RST_MODE;
 	}
 }
+
+void ICACHE_FLASH_ATTR user_udp_sent_cb(void *arg){//发送回调函数
+    os_printf("\r\nUDP发送成功！\r\n");
+//    os_timer_disarm(&test_timer);//定个时发送
+//    os_timer_setfn(&test_timer,user_udp_send,NULL);
+//    os_timer_arm(&test_timer,1000,NULL);//定1秒钟发送一次
+}
+
+void ICACHE_FLASH_ATTR user_udp_recv_cb(void *arg,
+        char *pdata,
+        unsigned short len){//接收回调函数
+    os_printf("UDP已经接收数据：%s",pdata);//UDP接收到的数据打印出来
+}
+
+//void ICACHE_FLASH_ATTR creat_udp_broadcast(void){
+//	wifi_set_broadcast_if(STATION_MODE);//设置UDP广播的发送接口station+soft-AP模式发送
+//	user_udp_espconn.type=ESPCONN_UDP;
+//	user_udp_espconn.proto.udp=(esp_udp*)os_zalloc(sizeof(esp_udp));
+//	user_udp_espconn.proto.udp->local_port=LISTEN_PORT;//本地端口
+//	user_udp_espconn.proto.udp->remote_port=UDP_SEND_PORT;//远程端口
+//
+//	const char udp_remote_ip[4]={255,255,255,255};//用于存放远程IP地址
+//	os_memcpy(&user_udp_espconn.proto.udp->remote_ip,udp_remote_ip,4);
+//
+//	espconn_regist_recvcb(&user_udp_espconn,user_udp_recv_cb);//接收回调函数
+//	espconn_regist_sentcb(&user_udp_espconn,user_udp_sent_cb);//发送回调函数
+//	espconn_create(&user_udp_espconn);//创建UDP连接
+//	user_udp_send(); //发送出去
+//}
 
 
 

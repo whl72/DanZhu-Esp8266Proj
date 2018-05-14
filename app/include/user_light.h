@@ -11,7 +11,8 @@
 #include "c_types.h"
 //#include "espconn.h"
 
-#define TT_CMD_LEN				8
+//#define TT_CMD_LEN				8
+#define TT_CMD_LEN				256
 #define CMD_NUM					11
 
 #ifndef NULL

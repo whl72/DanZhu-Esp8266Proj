@@ -122,6 +122,7 @@ getCmd(char *pAtRcvData)
   }
 }
 
+#if 0
 void ICACHE_FLASH_ATTR
 getTTData(char *pdata){
 	uint8 i=0;
@@ -157,6 +158,23 @@ getTTData(char *pdata){
 //		os_printf("tt_cmd：%x\r\n",ttcmd_buff[i]);
 	}
 }
+#else
+void ICACHE_FLASH_ATTR
+getTTData(char *pdata){
+	uint8 i=0;
+	uint8 temp=0;
+
+	os_printf("收到透传数据：%s\r\n",pdata);
+
+	pdata += 3;//消掉前面的":"
+	for(i=0; i<TT_CMD_LEN; i++){
+		if(*(pdata+1) != '}')
+			ttcmd_buff[i] = *pdata;
+		else
+			break;
+	}
+}
+#endif
 
 void ICACHE_FLASH_ATTR
 ackPing(char *pdata){

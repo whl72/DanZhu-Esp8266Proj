@@ -24,8 +24,16 @@ extern uint8 wifi_userconfig_flag;
 int pre_addr = 0;//待升级代码区扇区编号
 
 //const uint8 DEVICE_ID[] = "6301709190000035";
+#if 0
 uint8 DEV_ID[9] = {0};
 uint8 ROU_ID[9] = {0};
+uint8 test_temp_sever_ip[5] = {0};
+#else
+uint8 DEV_ID[9] = "001";
+uint8 ROU_ID[9] = "001";
+//uint8 test_temp_sever_ip[5] = {0};
+#endif
+
 
 void user_init(){
 	uint32 temp;
@@ -114,6 +122,13 @@ void ICACHE_FLASH_ATTR io_init(void){
 void ICACHE_FLASH_ATTR init_net(void){
 	uint8 i;
 
+#if 1
+//	test_temp_sever_ip[0] = '192'
+//	IP4_ADDR(&user_sever_ip, test_temp_sever_ip[0],
+//			test_temp_sever_ip[1], test_temp_sever_ip[2], test_temp_sever_ip[3]);
+
+#endif
+
 //	spi_flash_read((USER_BASE_ADDR*SECTOR_SIZE)+DEVICE_ID_ADDR,\
 //								   (uint32*)DEV_ID,ID_LENGTH);
 //	spi_flash_read((USER_BASE_ADDR*SECTOR_SIZE)+ROUTER_ID_ADDR,\
@@ -137,8 +152,11 @@ void ICACHE_FLASH_ATTR init_net(void){
 //		os_printf("NO SEVER INIT !\r\n");
 //		return;
 //	}
-	set_process_mode(NET_CONNECT);
+//	set_process_mode(NET_CONNECT);
 
+	//test ...
+
+	set_process_mode(ROUTER_CONFIG);
 	os_memset(&user_ap_config, 0, sizeof(&user_ap_config));
 	os_sprintf(user_ap_config.ssid,"DANZLE-LAB-%s",ROU_ID);
 	os_sprintf(user_ap_config.password,"DANZLE-LAB-%s",ROU_ID);
