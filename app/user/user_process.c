@@ -613,6 +613,8 @@ void ICACHE_FLASH_ATTR sever_connect(void){
 					user_login_sever();
 					sta_times = 0;
 					sta_count++;
+					//test ...后续拿掉
+					WORK_MODE = T_T_MODE;
 				}
 				if(sta_times > 1000){//10s未能登录服务器,直接进入RUN模式
 					WORK_MODE = NORMAL_MODE;
