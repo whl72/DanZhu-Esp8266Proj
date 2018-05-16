@@ -171,7 +171,7 @@ getTTData(char *pdata){
 		if(*(pdata+i) != '}')
 			ttcmd_buff[i] = *(pdata+i);
 		else
-			ttcmd_buff[i] = '}';
+//			ttcmd_buff[i] = '}';
 			break;
 	}
 }
