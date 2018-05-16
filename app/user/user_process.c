@@ -1192,6 +1192,8 @@ void ICACHE_FLASH_ATTR mode_process(void){
 				//后续要该成直接获取透传指令的strlen然后发送(而不是通过TT_CMD_LEN)，以解决不同设备不同长度指令兼容问题
 				//uart0_send_AT(ttcmd_buff,TT_CMD_LEN);
 //				uart0_send_AT(ttcmd_buff,ttcmd_len);
+				os_printf("准备向muc发送透传数据:%s\r\n",ttcmd_buff);
+				os_printf("透传数据长度：%d\r\n",strlen(ttcmd_buff));
 				uart0_send_AT(ttcmd_buff,strlen(ttcmd_buff));
 				memset(ttcmd_buff,0,TT_CMD_LEN);
 			}

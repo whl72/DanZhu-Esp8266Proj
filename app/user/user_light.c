@@ -168,9 +168,10 @@ getTTData(char *pdata){
 
 	pdata += 3;//消掉前面的":"
 	for(i=0; i<TT_CMD_LEN; i++){
-		if(*(pdata+1) != '}')
-			ttcmd_buff[i] = *pdata;
+		if(*(pdata+i) != '}')
+			ttcmd_buff[i] = *(pdata+i);
 		else
+			ttcmd_buff[i] = '}';
 			break;
 	}
 }

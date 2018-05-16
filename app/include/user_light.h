@@ -12,7 +12,7 @@
 //#include "espconn.h"
 
 //#define TT_CMD_LEN				8
-#define TT_CMD_LEN				256
+#define TT_CMD_LEN				512
 #define CMD_NUM					11
 
 #ifndef NULL
