@@ -21,6 +21,7 @@ uint8 ttcmd_buff[TT_CMD_LEN] = {0};
 extern uint8 tcp_send_buff[256];
 extern struct espconn user_tcp_conn;
 extern uint16 ping_outtime_count;
+extern uint32 time_stamp;
 
 int16_t cmdId = none_id;//Ö¸Áî±àºÅ
 
@@ -30,7 +31,8 @@ timer timers;//Ä£ÄâRTC
 
 cmd_funcationType user_cmd[CMD_NUM] ={
 	{"tt_download", 11, getTTData},
-	{"ping", 4, ackPing}
+	{"ping", 4, ackPing},
+	{"GetTimeRsp", 10, getTimeStampData}
 };
 
 static int8_t ICACHE_FLASH_ATTR
@@ -191,6 +193,17 @@ ackPing(char *pdata){
 //	os_printf("hours:%d\r\n",timers.hours);
 //	os_printf("minutes:%d\r\n",timers.minutes);
 	ping_outtime_count = 0;
+}
+
+void ICACHE_FLASH_ATTR
+getTimeStampData(char *pdata){
+	char *temp_buff;
+
+	temp_buff = strstr(pdata, "Now");
+	temp_buff += 6;
+	time_stamp = atoi(temp_buff);
+
+	os_printf("time_stamp:%d\r\n", time_stamp);
 }
 
 void ICACHE_FLASH_ATTR

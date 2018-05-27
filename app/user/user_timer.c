@@ -19,6 +19,9 @@ uint16 led_r_count = 0;
 uint8 led_g_flag = FALSE;
 uint8 led_r_flag = FALSE;
 uint8 key_press_flag = FALSE;
+uint8 get_time_stamp_flag = FALSE;
+uint8 send_heartbeat_falg = FALSE;
+
 uint16 key_press_cnt = 0;
 uint8 blink_mode = 0;//led闪烁的模式标志
 uint16 blink_max_cnt = 0xffff;//led闪烁频率控制
@@ -27,6 +30,8 @@ uint16 count_1s_count = 0;//1s定时检测
 uint16 count_timer = 0;//基本计数
 uint16 count_up_status = 0;//定时上传设备状态计数
 uint8 count_app_status = 0;//定时向app发送状态信息计数
+uint32 count_device_run_time = 0;//设备运行时间
+uint32 time_stamp;
 
 uint16 recon_ap_delay = 0;//重连路由延时
 uint16 recon_sever_delay = 0;//重连服务器延时
@@ -42,7 +47,9 @@ extern uint8 send_status_count;
 extern struct espconn user_tcp_conn;
 
 void ICACHE_FLASH_ATTR timer_process(void){
-	count_timer++;
+	static uint32 timer_count;
+
+	timer_count++;
 	if(count_10ms!=0xffff)count_10ms++;
 	if(count_1s_count!=0xffff)count_1s_count++;
 	if((led_g_count!=0x0) || (led_g_count!=0xfffff))led_g_count++;
@@ -53,10 +60,11 @@ void ICACHE_FLASH_ATTR timer_process(void){
 	if(key_press_flag) key_press_cnt++;
 	if(sever_login_flag) count_up_status++;
 
-	if(count_timer >= 100){//1s
-		count_timer = 0;
+	if(!(timer_count % 100)){//1s
 		ping_outtime_count++;
 		send_status_count++;
+		count_device_run_time++;
+		time_stamp++;
 
 //		count_app_status++;
 //		if((timers.seconds++)>=60){
@@ -74,6 +82,12 @@ void ICACHE_FLASH_ATTR timer_process(void){
 //		if(timers.week >6){
 //			timers.week=0;
 //		}
+	}
+	if(!(timer_count % (100*30))){
+		send_heartbeat_falg = TRUE;
+	}
+	if(!(timer_count % (100*50))){
+		get_time_stamp_flag = TRUE;
 	}
 
 	led_blink();

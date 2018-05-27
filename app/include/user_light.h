@@ -85,5 +85,6 @@ void ICACHE_FLASH_ATTR exeCmd(void);
 void ICACHE_FLASH_ATTR getCmd(char *pAtRcvData);
 void ICACHE_FLASH_ATTR ackPing(char *pdata);
 void ICACHE_FLASH_ATTR getTTData(char *pdata);
+void ICACHE_FLASH_ATTR getTimeStampData(char *pdata);
 
 #endif /* APP_INCLUDE_USER_LIGHT_H_ */

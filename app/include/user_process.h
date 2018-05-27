@@ -78,5 +78,10 @@ void ICACHE_FLASH_ATTR set_process_mode(WORK_MODE_T mode);
 WORK_MODE_T ICACHE_FLASH_ATTR get_process_mode(void);
 void ICACHE_FLASH_ATTR send_mcu_mode_status(void);
 void ICACHE_FLASH_ATTR creat_udp_broadcast(void);
+void ICACHE_FLASH_ATTR user_udp_recv_cb(void *arg,char *pdata,unsigned short len);
+void ICACHE_FLASH_ATTR user_udp_sent_cb(void *arg);
+void ICACHE_FLASH_ATTR user_udp_req_severconf_send(void);
+void ICACHE_FLASH_ATTR send_req_timestamp(void);
+void ICACHE_FLASH_ATTR send_heartbeat(void);
 
 #endif /* APP_INCLUDE_USER_PROCESS_H_ */
