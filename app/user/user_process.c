@@ -40,7 +40,7 @@ uint16 sever_port;
  * 17.3.9 更新内容：1.增加了控制盒查询状态时，打印返回的状态信息
  * 				  2.修改了在与服务器断开连接时只调用 espconn_connect
  */
-const uint8_t software_ver[] = "0.1.1";
+const uint8_t software_ver[] = "0.2.0";
 const uint8_t if_ver[] = "0.1.1";
 
 uint8 wifi_userconfig_flag = FALSE;//首次上电或者用户自动切换配置网络标志
